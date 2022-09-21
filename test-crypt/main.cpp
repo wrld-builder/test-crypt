@@ -1,7 +1,10 @@
 #include "ecc.h"
+#include <bitset>
 
 int main() {
-    FieldElement a(2, 19);
-    FieldElement b(7, 19);
-    std::cout << (a / &b).getNumberFieldElement();
+    std::cout << sizeof(0) << std::endl;
+    std::cout << sizeof(NULL) << std::endl;
+    std::cout << sizeof(nullptr) << std::endl;
+    std::cout << sizeof(std::bitset<0>) << std::endl;
+    //std::cout << sizeof(std::optional) << std::endl;
 }

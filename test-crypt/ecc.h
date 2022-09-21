@@ -5,6 +5,13 @@
 #include <cmath>
 #include <complex>
 
+using Exceptions::FieldElementSpace::PrimeNotEqual;
+using Exceptions::FieldElementSpace::OtherFieldElementIsEmpty;
+using Exceptions::FieldElementSpace::NumberHigherPrimeOrLessZero;
+using Exceptions::PointSpace::PointNotOnCurve;
+using Exceptions::PointSpace::PointIsEmpty;
+using Exceptions::PointSpace::PointIsInfinity;
+
 class FieldElement {
 public:
     explicit FieldElement(const int number, const int prime);
@@ -13,72 +20,38 @@ public:
 
     ~FieldElement(){};
 
-    inline FieldElement operator+(FieldElement* other) {
-        try {
-            if(this->prime != other->prime) throw Exceptions::PrimeNotEqual();
+    FieldElement operator+(FieldElement* other);
 
-            auto result = (this->number + other->number) % this->prime;
-            return FieldElement(result, prime);
-        } catch(Exceptions::PrimeNotEqual& exception) {
-            DEBUG(exception.what());
-        }
+    FieldElement operator-(FieldElement* other);
 
-        return FieldElement();
-    }
+    FieldElement operator*(FieldElement* other);
 
-    inline FieldElement operator-(FieldElement* other) {
-        try {
-            if(this->prime != other->prime) throw Exceptions::PrimeNotEqual();
+    FieldElement operator/(FieldElement* other);
 
-            auto result = (this->number - other->number) % this->prime;
-            return FieldElement(result, prime);
-
-        } catch(Exceptions::PrimeNotEqual& exception) {
-            DEBUG(exception.what());
-        }
-
-        return FieldElement();
-    }
-
-    inline FieldElement operator*(FieldElement* other) {
-        try {
-            if(this->prime != other->prime) throw Exceptions::PrimeNotEqual();
-
-            auto result = (this->number * other->number) % this->prime;
-            return FieldElement(result, prime);
-
-        } catch(Exceptions::PrimeNotEqual& exception) {
-            DEBUG(exception.what());
-        }
-
-        return FieldElement();
-    }
-
-    inline FieldElement operator/(FieldElement* other) {
-        try {
-            if(this->prime != other->prime) throw Exceptions::PrimeNotEqual();
-
-            auto result = this->number * static_cast<long int>((std::pow(other->number, this->prime - 2))) % this->prime;
-            return FieldElement(result, prime);
-
-        } catch(Exceptions::PrimeNotEqual& exception) {
-            DEBUG(exception.what());
-        }
-
-        return FieldElement();
-    }
+    bool operator==(FieldElement* other);
 
     inline int getNumberFieldElement() const { return this->number; }
 
     inline int getPrimeFieldElement() const { return this->prime; }
-
-    bool isEqualFieldElement(FieldElement* other) const;      //equal two field elements
 
     FieldElement powFieldElement(const int& exponent) const;    //pow number
 
 private:
     int number = 0;
     int prime = 0;
+};
+
+class Point {     // eliptic curve interface
+public:
+    explicit Point(const int x, const int y, const int a, const int b);
+
+    bool operator==(Point* other);
+
+private:
+    int x = 0;
+    int y = 0;
+    int a = 0;
+    int b = 0;
 };
 
 #endif // ECC_H
