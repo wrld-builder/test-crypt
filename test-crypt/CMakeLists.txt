@@ -8,11 +8,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SOURCE
-    main.cpp
-    ecc.cpp)
+    src/main.cpp
+    src/ecc.cpp)
 
 set(INCLUDE
-    ecc.h
-    exception.h)
+    include/ecc.h
+    include/exception.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE} ${INCLUDE})

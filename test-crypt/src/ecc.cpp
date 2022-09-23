@@ -1,5 +1,5 @@
-#include "ecc.h"
-#include "exception.h"
+#include "../include/ecc.h"
+#include "../include/exception.h"
 #include <cstdlib>
 
 FieldElement::FieldElement(const int number, const int prime) {

@@ -1,4 +1,4 @@
-#include "ecc.h"
+#include "../include/ecc.h"
 
 int main() {
     auto a  = Point(std::make_pair(true, 2), std::make_pair(true, 5), 5, 7);
