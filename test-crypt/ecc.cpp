@@ -1,5 +1,6 @@
 #include "ecc.h"
 #include "exception.h"
+#include <cstdlib>
 
 FieldElement::FieldElement(const int number, const int prime) {
     try {
@@ -9,6 +10,7 @@ FieldElement::FieldElement(const int number, const int prime) {
         this->prime = prime;
     } catch(NumberHigherPrimeOrLessZero& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 }
 
@@ -20,6 +22,7 @@ FieldElement FieldElement::operator+(FieldElement *other) {
         return FieldElement(result, prime);
     } catch(PrimeNotEqual& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 
     return FieldElement();
@@ -34,6 +37,7 @@ FieldElement FieldElement::operator-(FieldElement *other) {
 
     } catch(PrimeNotEqual& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 
     return FieldElement();
@@ -48,6 +52,7 @@ FieldElement FieldElement::operator*(FieldElement *other) {
 
     } catch(PrimeNotEqual& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 
     return FieldElement();
@@ -62,6 +67,7 @@ FieldElement FieldElement::operator/(FieldElement *other) {
 
     } catch(PrimeNotEqual& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 
     return FieldElement();
@@ -75,6 +81,7 @@ bool FieldElement::operator==(FieldElement* other) {
         else return false;
     }  catch (OtherFieldElementIsEmpty& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 
     return false;
@@ -85,12 +92,12 @@ FieldElement FieldElement::powFieldElement(const int& exponent) const {
     return FieldElement(result, this->prime);
 }
 
-Point::Point(const int x, const int y, const int a, const int b) {
+Point::Point(const std::pair<bool, const int> x, const std::pair<bool, const int> y, const int a, const int b) {
     try {
-        if(std::pow(y, 2) != std::pow(x, 3) + a * x + b) throw PointNotOnCurve();
+        if(std::pow(y.second, 2) != std::pow(x.second, 3) + a * x.second + b) throw PointNotOnCurve();
 
         try {
-            if(sizeof(x) == 0 && sizeof(y) == 0) throw PointIsInfinity();
+            if(x.first == false && y.first == false) throw PointIsInfinity();
 
             this->x = x;
             this->y = y;
@@ -98,10 +105,11 @@ Point::Point(const int x, const int y, const int a, const int b) {
             this->b = b;
         } catch(PointIsInfinity& exception) {
             DEBUG(exception.what());
-            return;
+            std::exit(1);
         }
     }  catch (const PointNotOnCurve& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 }
 
@@ -113,7 +121,35 @@ bool Point::operator==(Point *other) {
         else return false;
     } catch(const PointIsEmpty& exception) {
         DEBUG(exception.what());
+        std::exit(1);
     }
 
     return false;
+}
+
+Point Point::operator+(Point *other) {
+    try {
+        if(this->a != other->a && this->b != other->b)
+            throw std::exception();
+        else if(this->x.second == other->x.second && this->y.second != other->y.second)
+            return Point(std::make_pair(false, 0), std::make_pair(false, 0), 0, 0);
+
+        else if(this->x.second != other->x.second) {
+            auto incline = (other->y.second - this->y.second) / (other->x.second - this->x.second);
+            auto new_x = std::pow(incline, 2) - this->x.second - other->x.second;
+            auto new_y = incline * (this->x.second - new_x) - this->y.second;
+
+            return Point(std::make_pair(true, new_x), std::make_pair(true, new_y), this->a, this->b);
+        }
+
+        else if(!this->x.first)
+            return *other;
+        else if(!other->x.first)
+            return *this;
+    } catch(std::exception& exception) {
+        DEBUG(exception.what() << " . Exception: points not on the same curve");
+        std::exit(1);
+    }
+
+    std::exit(1);
 }

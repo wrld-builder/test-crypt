@@ -43,13 +43,26 @@ private:
 
 class Point {     // eliptic curve interface
 public:
-    explicit Point(const int x, const int y, const int a, const int b);
+    // pair for adding infinity point on eliptic curve
+    // true - normal point
+    // false - infinity point
+    explicit Point(const std::pair<bool, const int> x, const std::pair<bool, const int> y, const int a, const int b);
 
     bool operator==(Point* other);
 
+    Point operator+(Point* other);
+
+    inline int getXCoordinate() const { return this->x.second; }
+
+    inline int getYCoordinate() const { return this->y.second; }
+
+    inline int getACoefficient() const { return this->a; }
+
+    inline int getBCoefficient() const { return this->b; }
+
 private:
-    int x = 0;
-    int y = 0;
+    std::pair<bool, int> x = {};
+    std::pair<bool, int> y = {};
     int a = 0;
     int b = 0;
 };

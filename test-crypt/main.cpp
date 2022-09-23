@@ -1,10 +1,9 @@
 #include "ecc.h"
-#include <bitset>
 
 int main() {
-    std::cout << sizeof(0) << std::endl;
-    std::cout << sizeof(NULL) << std::endl;
-    std::cout << sizeof(nullptr) << std::endl;
-    std::cout << sizeof(std::bitset<0>) << std::endl;
-    //std::cout << sizeof(std::optional) << std::endl;
+    auto a  = Point(std::make_pair(true, 2), std::make_pair(true, 5), 5, 7);
+    auto b = Point(std::make_pair(true, -1), std::make_pair(true, -1), 5 ,7);
+    auto c = a + &b;
+    std::cout << c.getXCoordinate() << " " << c.getYCoordinate() << std::endl;
+    std::cout << c.getACoefficient() << " " << c.getBCoefficient() << std::endl;
 }
