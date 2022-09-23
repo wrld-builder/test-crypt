@@ -132,11 +132,20 @@ Point Point::operator+(Point *other) {
         if(this->a != other->a && this->b != other->b)
             throw std::exception();
         else if(this->x.second == other->x.second && this->y.second != other->y.second)
-            return Point(std::make_pair(false, 0), std::make_pair(false, 0), 0, 0);
+            return Point(std::make_pair(false, 0), std::make_pair(false, 0), this->a, this->b);
+        else if(this == other && this->x.second == 0 && this->y.second == 0) {
+            return Point(std::make_pair(false, 0), std::make_pair(false, 0), this->a, this->b);
+        }
 
         else if(this->x.second != other->x.second) {
             auto incline = (other->y.second - this->y.second) / (other->x.second - this->x.second);
             auto new_x = std::pow(incline, 2) - this->x.second - other->x.second;
+            auto new_y = incline * (this->x.second - new_x) - this->y.second;
+
+            return Point(std::make_pair(true, new_x), std::make_pair(true, new_y), this->a, this->b);
+        } else if(this == other) {
+            auto incline = (3 * std::pow(this->x.second, 2) + this->a) / (2 * this->y.second);
+            auto new_x = std::pow(incline, 2) - (2 * this->x.second);
             auto new_y = incline * (this->x.second - new_x) - this->y.second;
 
             return Point(std::make_pair(true, new_x), std::make_pair(true, new_y), this->a, this->b);
