@@ -2,7 +2,7 @@
 #include "../include/exception.h"
 #include <cstdlib>
 
-FieldElement::FieldElement(const int number, const int prime) {
+FieldElement::FieldElement(const long long number, const long long prime) {
     try {
         if(number > prime || number < 0) throw NumberHigherPrimeOrLessZero();
 
@@ -14,11 +14,13 @@ FieldElement::FieldElement(const int number, const int prime) {
     }
 }
 
-FieldElement FieldElement::operator+(FieldElement *other) {
+FieldElement FieldElement::operator+(FieldElement other) {
     try {
-        if(this->prime != other->prime) throw PrimeNotEqual();
+        if(this->prime != other.prime) throw PrimeNotEqual();
 
-        auto result = (this->number + other->number) % this->prime;
+        long long result = (this->number + other.number) % this->prime;
+        if(result < 0) result += this->prime;
+
         return FieldElement(result, prime);
     } catch(PrimeNotEqual& exception) {
         DEBUG(exception.what());
@@ -28,26 +30,13 @@ FieldElement FieldElement::operator+(FieldElement *other) {
     return FieldElement();
 }
 
-FieldElement FieldElement::operator-(FieldElement *other) {
+FieldElement FieldElement::operator-(FieldElement other) {
     try {
-        if(this->prime != other->prime) throw PrimeNotEqual();
+        if(this->prime != other.prime) throw PrimeNotEqual();
 
-        auto result = (this->number - other->number) % this->prime;
-        return FieldElement(result, prime);
+        long long result = (this->number - other.number) % this->prime;
+        if(result < 0) result += this->prime;
 
-    } catch(PrimeNotEqual& exception) {
-        DEBUG(exception.what());
-        std::exit(1);
-    }
-
-    return FieldElement();
-}
-
-FieldElement FieldElement::operator*(FieldElement *other) {
-    try {
-        if(this->prime != other->prime) throw PrimeNotEqual();
-
-        auto result = (this->number * other->number) % this->prime;
         return FieldElement(result, prime);
 
     } catch(PrimeNotEqual& exception) {
@@ -58,11 +47,13 @@ FieldElement FieldElement::operator*(FieldElement *other) {
     return FieldElement();
 }
 
-FieldElement FieldElement::operator/(FieldElement *other) {
+FieldElement FieldElement::operator*(FieldElement other) {
     try {
-        if(this->prime != other->prime) throw PrimeNotEqual();
+        if(this->prime != other.prime) throw PrimeNotEqual();
 
-        auto result = this->number * static_cast<long int>((std::pow(other->number, this->prime - 2))) % this->prime;
+        long long result = (this->number * other.number) % this->prime;
+        if(result < 0) result += this->prime;
+
         return FieldElement(result, prime);
 
     } catch(PrimeNotEqual& exception) {
@@ -73,11 +64,28 @@ FieldElement FieldElement::operator/(FieldElement *other) {
     return FieldElement();
 }
 
-bool FieldElement::operator==(FieldElement* other) {
+FieldElement FieldElement::operator/(FieldElement other) {
     try {
-        if(other == nullptr) throw OtherFieldElementIsEmpty();
+        if(this->prime != other.prime) throw PrimeNotEqual();
 
-        if(this->number == other->number && this->prime == other->prime) return true;
+        long long result = this->number * (static_cast<long long>((modexp(other.number, this->prime - 2, this->prime)))) % this->prime;
+        if(result < 0) result += this->prime;
+
+        return FieldElement(result, prime);
+
+    } catch(PrimeNotEqual& exception) {
+        DEBUG(exception.what());
+        std::exit(1);
+    }
+
+    return FieldElement();
+}
+
+bool FieldElement::operator==(FieldElement other) {
+    try {
+        //if(&other == nullptr) throw OtherFieldElementIsEmpty();
+
+        if(this->number == other.number && this->prime == other.prime) return true;
         else return false;
     }  catch (OtherFieldElementIsEmpty& exception) {
         DEBUG(exception.what());
@@ -87,39 +95,13 @@ bool FieldElement::operator==(FieldElement* other) {
     return false;
 }
 
-FieldElement FieldElement::powFieldElement(const int& exponent) const {
-    auto result = static_cast<long int>(std::pow(this->number, exponent)) % this->prime;
-    return FieldElement(result, this->prime);
-}
-
-Point::Point(const std::pair<bool, const int> x, const std::pair<bool, const int> y, const int a, const int b) {
+bool FieldElement::operator!=(FieldElement other) {
     try {
-        if(std::pow(y.second, 2) != std::pow(x.second, 3) + a * x.second + b) throw PointNotOnCurve();
+        //if(other == nullptr) throw OtherFieldElementIsEmpty();
 
-        try {
-            if(x.first == false && y.first == false) throw PointIsInfinity();
-
-            this->x = x;
-            this->y = y;
-            this->a = a;
-            this->b = b;
-        } catch(PointIsInfinity& exception) {
-            DEBUG(exception.what());
-            std::exit(1);
-        }
-    }  catch (const PointNotOnCurve& exception) {
-        DEBUG(exception.what());
-        std::exit(1);
-    }
-}
-
-bool Point::operator==(Point *other) {
-    try {
-        if(other == nullptr) throw PointIsEmpty();
-
-        if(this->x == other->x && this->y == other->y && this->a == other->a && this->b == other->b) return true;
+        if(this->number != other.number or this->prime != other.prime) return true;
         else return false;
-    } catch(const PointIsEmpty& exception) {
+    }  catch (OtherFieldElementIsEmpty& exception) {
         DEBUG(exception.what());
         std::exit(1);
     }
@@ -127,38 +109,57 @@ bool Point::operator==(Point *other) {
     return false;
 }
 
-Point Point::operator+(Point *other) {
+FieldElement FieldElement::powFieldElement(const int exponent) {
+    long long result = static_cast<long long>(std::pow(this->number, exponent)) % this->prime;
+    if(result < 0) result += this->prime;
+
+    return FieldElement(result, this->prime);
+}
+
+int MathBase::modexp(const int x, const int y, const int N) const {
+  if (y == 0) return 1;
+  int z = modexp(x, y / 2, N);
+  if (y % 2 == 0)
+    return (z*z) % N;
+  else
+    return (x*z*z) % N;
+}
+
+
+Point::Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b) {
     try {
-        if(this->a != other->a && this->b != other->b)
-            throw std::exception();
-        else if(this->x.second == other->x.second && this->y.second != other->y.second)
-            return Point(std::make_pair(false, 0), std::make_pair(false, 0), this->a, this->b);
-        else if(this == other && this->x.second == 0 && this->y.second == 0) {
-            return Point(std::make_pair(false, 0), std::make_pair(false, 0), this->a, this->b);
-        }
+        this->x = x;
+        this->y = y;
+        this->a = a;
+        this->b = b;
 
-        else if(this->x.second != other->x.second) {
-            auto incline = (other->y.second - this->y.second) / (other->x.second - this->x.second);
-            auto new_x = std::pow(incline, 2) - this->x.second - other->x.second;
-            auto new_y = incline * (this->x.second - new_x) - this->y.second;
-
-            return Point(std::make_pair(true, new_x), std::make_pair(true, new_y), this->a, this->b);
-        } else if(this == other) {
-            auto incline = (3 * std::pow(this->x.second, 2) + this->a) / (2 * this->y.second);
-            auto new_x = std::pow(incline, 2) - (2 * this->x.second);
-            auto new_y = incline * (this->x.second - new_x) - this->y.second;
-
-            return Point(std::make_pair(true, new_x), std::make_pair(true, new_y), this->a, this->b);
-        }
-
-        else if(!this->x.first)
-            return *other;
-        else if(!other->x.first)
-            return *this;
-    } catch(std::exception& exception) {
-        DEBUG(exception.what() << " . Exception: points not on the same curve");
+        if(this->y.powFieldElement(2) != this->x.powFieldElement(3) + this->a * this->x + this->b) throw PointNotOnCurve();
+        //else if(this->x == nullptr && this->y == nullptr) std::exit(1);
+    } catch(PointNotOnCurve& exception) {
+        DEBUG(exception.what());
         std::exit(1);
     }
+}
 
-    std::exit(1);
+Point Point::operator+(Point other) {
+    try {
+        if(this->a != other.a && this->b != other.b) throw PointNotOnCurve();
+
+        else if(this->x != other.x) {
+            auto s = (other.y - this->y) / (other.x - this->x);
+            auto new_x = s.powFieldElement(2) - this->x - other.x;
+            auto new_y = s * (this->x - new_x) - this->y;
+
+            return Point(new_x, new_y, this->a, this->b);
+        } else if(this == &other) {
+            auto s = (FieldElement(3, this->a.getPrimeFieldElement()) * this->x.powFieldElement(2) + this->a) / (FieldElement(2, this->a.getPrimeFieldElement()) * this->y);
+            auto x = s.powFieldElement(2) - FieldElement(2, this->a.getPrimeFieldElement()) * this->x;
+            auto y = s * (this->x - x) - this->y;
+
+            return Point(x, y, this->a, this->b);
+        }
+    }  catch (PointNotOnCurve& exception) {
+        DEBUG(exception.what());
+        std::exit(1);
+    }
 }

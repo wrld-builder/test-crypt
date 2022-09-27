@@ -12,59 +12,60 @@ using Exceptions::PointSpace::PointNotOnCurve;
 using Exceptions::PointSpace::PointIsEmpty;
 using Exceptions::PointSpace::PointIsInfinity;
 
-class FieldElement {
+class MathBase {
 public:
-    explicit FieldElement(const int number, const int prime);
+    int modexp(const int x, const int y, const int N) const;
+};
+
+class FieldElement : public MathBase {
+public:
+    explicit FieldElement(const long long number, const long long prime);
 
     explicit inline FieldElement(){};
 
     ~FieldElement(){};
 
-    FieldElement operator+(FieldElement* other);
+    FieldElement operator+(FieldElement other);
 
-    FieldElement operator-(FieldElement* other);
+    FieldElement operator-(FieldElement other);
 
-    FieldElement operator*(FieldElement* other);
+    FieldElement operator*(FieldElement other);
 
-    FieldElement operator/(FieldElement* other);
+    FieldElement operator/(FieldElement other);
 
-    bool operator==(FieldElement* other);
+    bool operator==(FieldElement other);
+
+    bool operator!=(FieldElement other);
 
     inline int getNumberFieldElement() const { return this->number; }
 
     inline int getPrimeFieldElement() const { return this->prime; }
 
-    FieldElement powFieldElement(const int& exponent) const;    //pow number
+    FieldElement powFieldElement(const int exponent);    //pow number
 
 private:
-    int number = 0;
-    int prime = 0;
+    long long number = 0;
+    long long prime = 0;
 };
 
 class Point {     // eliptic curve interface
-public:
-    // pair for adding infinity point on eliptic curve
-    // true - normal point
-    // false - infinity point
-    explicit Point(const std::pair<bool, const int> x, const std::pair<bool, const int> y, const int a, const int b);
+public:    
+    // ECC with extension fields constructor
+    explicit Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b);
 
-    bool operator==(Point* other);
+    Point operator+(Point other);
 
-    Point operator+(Point* other);
+    inline ~Point(){};
 
-    inline int getXCoordinate() const { return this->x.second; }
+    inline FieldElement getX() const { return x; }
 
-    inline int getYCoordinate() const { return this->y.second; }
-
-    inline int getACoefficient() const { return this->a; }
-
-    inline int getBCoefficient() const { return this->b; }
+    inline FieldElement getY() const { return y; }
 
 private:
-    std::pair<bool, int> x = {};
-    std::pair<bool, int> y = {};
-    int a = 0;
-    int b = 0;
+    FieldElement a;
+    FieldElement b;
+    FieldElement x;
+    FieldElement y;
 };
 
 #endif // ECC_H
