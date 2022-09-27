@@ -4,6 +4,7 @@
 #include "exception.h"
 #include <cmath>
 #include <complex>
+#include <memory>
 
 using Exceptions::FieldElementSpace::PrimeNotEqual;
 using Exceptions::FieldElementSpace::OtherFieldElementIsEmpty;
@@ -23,19 +24,19 @@ public:
 
     explicit inline FieldElement(){};
 
-    ~FieldElement(){};
+    inline ~FieldElement(){};
 
-    FieldElement operator+(FieldElement other);
+    FieldElement operator+(const FieldElement other);
 
-    FieldElement operator-(FieldElement other);
+    FieldElement operator-(const FieldElement other);
 
-    FieldElement operator*(FieldElement other);
+    FieldElement operator*(const FieldElement other);
 
-    FieldElement operator/(FieldElement other);
+    FieldElement operator/(const FieldElement other);
 
-    bool operator==(FieldElement other);
+    bool operator==(const FieldElement *other);
 
-    bool operator!=(FieldElement other);
+    bool operator!=(const FieldElement *other);
 
     inline int getNumberFieldElement() const { return this->number; }
 
@@ -53,19 +54,19 @@ public:
     // ECC with extension fields constructor
     explicit Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b);
 
-    Point operator+(Point other);
-
     inline ~Point(){};
 
-    inline FieldElement getX() const { return x; }
+    Point operator+(Point other);
 
-    inline FieldElement getY() const { return y; }
+    inline std::shared_ptr<FieldElement> getX() const { return x; }
+
+    inline std::shared_ptr<FieldElement> getY() const { return y; }
 
 private:
     FieldElement a;
     FieldElement b;
-    FieldElement x;
-    FieldElement y;
+    std::shared_ptr<FieldElement> x = nullptr;
+    std::shared_ptr<FieldElement> y = nullptr;
 };
 
 #endif // ECC_H

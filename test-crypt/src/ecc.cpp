@@ -14,7 +14,7 @@ FieldElement::FieldElement(const long long number, const long long prime) {
     }
 }
 
-FieldElement FieldElement::operator+(FieldElement other) {
+FieldElement FieldElement::operator+(const FieldElement other) {
     try {
         if(this->prime != other.prime) throw PrimeNotEqual();
 
@@ -30,7 +30,7 @@ FieldElement FieldElement::operator+(FieldElement other) {
     return FieldElement();
 }
 
-FieldElement FieldElement::operator-(FieldElement other) {
+FieldElement FieldElement::operator-(const FieldElement other) {
     try {
         if(this->prime != other.prime) throw PrimeNotEqual();
 
@@ -47,7 +47,7 @@ FieldElement FieldElement::operator-(FieldElement other) {
     return FieldElement();
 }
 
-FieldElement FieldElement::operator*(FieldElement other) {
+FieldElement FieldElement::operator*(const FieldElement other) {
     try {
         if(this->prime != other.prime) throw PrimeNotEqual();
 
@@ -64,7 +64,7 @@ FieldElement FieldElement::operator*(FieldElement other) {
     return FieldElement();
 }
 
-FieldElement FieldElement::operator/(FieldElement other) {
+FieldElement FieldElement::operator/(const FieldElement other) {
     try {
         if(this->prime != other.prime) throw PrimeNotEqual();
 
@@ -81,11 +81,11 @@ FieldElement FieldElement::operator/(FieldElement other) {
     return FieldElement();
 }
 
-bool FieldElement::operator==(FieldElement other) {
+bool FieldElement::operator==(const FieldElement *other) {
     try {
-        //if(&other == nullptr) throw OtherFieldElementIsEmpty();
+        if(other == nullptr) throw OtherFieldElementIsEmpty();
 
-        if(this->number == other.number && this->prime == other.prime) return true;
+        if(this->number == other->number && this->prime == other->prime) return true;
         else return false;
     }  catch (OtherFieldElementIsEmpty& exception) {
         DEBUG(exception.what());
@@ -95,11 +95,11 @@ bool FieldElement::operator==(FieldElement other) {
     return false;
 }
 
-bool FieldElement::operator!=(FieldElement other) {
+bool FieldElement::operator!=(const FieldElement *other) {
     try {
-        //if(other == nullptr) throw OtherFieldElementIsEmpty();
+        if(other == nullptr) throw OtherFieldElementIsEmpty();
 
-        if(this->number != other.number or this->prime != other.prime) return true;
+        if(this->number != other->number or this->prime != other->prime) return true;
         else return false;
     }  catch (OtherFieldElementIsEmpty& exception) {
         DEBUG(exception.what());
@@ -128,13 +128,16 @@ int MathBase::modexp(const int x, const int y, const int N) const {
 
 Point::Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b) {
     try {
-        this->x = x;
-        this->y = y;
+        this->x = std::make_shared<FieldElement>(x);
+        this->y = std::make_shared<FieldElement>(y);
         this->a = a;
         this->b = b;
 
-        if(this->y.powFieldElement(2) != this->x.powFieldElement(3) + this->a * this->x + this->b) throw PointNotOnCurve();
-        //else if(this->x == nullptr && this->y == nullptr) std::exit(1);
+        auto right_part = this->x->powFieldElement(3) + this->a * *this->x + this->b;
+        auto left_part = this->y->powFieldElement(2);
+
+        if(left_part != &right_part) throw PointNotOnCurve();
+        else if(this->x == nullptr && this->y == nullptr) std::exit(1);
     } catch(PointNotOnCurve& exception) {
         DEBUG(exception.what());
         std::exit(1);
@@ -143,18 +146,18 @@ Point::Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b) {
 
 Point Point::operator+(Point other) {
     try {
-        if(this->a != other.a && this->b != other.b) throw PointNotOnCurve();
+        if(this->a != &other.a && this->b != &other.b) throw PointNotOnCurve();
 
         else if(this->x != other.x) {
-            auto s = (other.y - this->y) / (other.x - this->x);
-            auto new_x = s.powFieldElement(2) - this->x - other.x;
-            auto new_y = s * (this->x - new_x) - this->y;
+            auto s = (*other.y - *this->y) / (*other.x - *this->x);
+            auto new_x = s.powFieldElement(2) - *this->x - *other.x;
+            auto new_y = s * (*this->x - new_x) - *this->y;
 
             return Point(new_x, new_y, this->a, this->b);
         } else if(this == &other) {
-            auto s = (FieldElement(3, this->a.getPrimeFieldElement()) * this->x.powFieldElement(2) + this->a) / (FieldElement(2, this->a.getPrimeFieldElement()) * this->y);
-            auto x = s.powFieldElement(2) - FieldElement(2, this->a.getPrimeFieldElement()) * this->x;
-            auto y = s * (this->x - x) - this->y;
+            auto s = (FieldElement(3, this->a.getPrimeFieldElement()) * this->x->powFieldElement(2) + this->a) / (FieldElement(2, this->a.getPrimeFieldElement()) * *this->y);
+            auto x = s.powFieldElement(2) - FieldElement(2, this->a.getPrimeFieldElement()) * *this->x;
+            auto y = s * (*this->x - x) - *this->y;
 
             return Point(x, y, this->a, this->b);
         }
