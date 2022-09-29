@@ -82,31 +82,12 @@ FieldElement FieldElement::operator/(const FieldElement other) {
 }
 
 bool FieldElement::operator==(const FieldElement *other) {
-    try {
-        if(other == nullptr) throw OtherFieldElementIsEmpty();
-
-        if(this->number == other->number && this->prime == other->prime) return true;
-        else return false;
-    }  catch (OtherFieldElementIsEmpty& exception) {
-        DEBUG(exception.what());
-        std::exit(1);
-    }
-
-    return false;
+    if(other == nullptr) return false;
+    return this->number == other->number && this->prime == other->prime;
 }
 
-bool FieldElement::operator!=(const FieldElement *other) {
-    try {
-        if(other == nullptr) throw OtherFieldElementIsEmpty();
-
-        if(this->number != other->number or this->prime != other->prime) return true;
-        else return false;
-    }  catch (OtherFieldElementIsEmpty& exception) {
-        DEBUG(exception.what());
-        std::exit(1);
-    }
-
-    return false;
+bool FieldElement::operator!=(const FieldElement other) {
+    return !(*this == &other);
 }
 
 FieldElement FieldElement::powFieldElement(const int exponent) {
@@ -126,18 +107,29 @@ int MathBase::modexp(const int x, const int y, const int N) const {
 }
 
 
-Point::Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b) {
+Point::Point(FieldElement *x, FieldElement *y, FieldElement a, FieldElement b) {
     try {
-        this->x = std::make_shared<FieldElement>(x);
-        this->y = std::make_shared<FieldElement>(y);
+        if(x == nullptr && y == nullptr) {
+            this->x = nullptr;
+            this->y = nullptr;
+            this->a = a;
+            this->b = b;
+            return;     // look here, return if inf
+        } else {
+            this->x = std::make_shared<FieldElement>(*x);
+            this->y = std::make_shared<FieldElement>(*y);
+        }
+
         this->a = a;
         this->b = b;
 
-        auto right_part = this->x->powFieldElement(3) + this->a * *this->x + this->b;
-        auto left_part = this->y->powFieldElement(2);
-
-        if(left_part != &right_part) throw PointNotOnCurve();
-        else if(this->x == nullptr && this->y == nullptr) std::exit(1);
+        if(this->x == nullptr && this->y == nullptr) {
+            return;
+        } else {
+            auto right_part = this->x->powFieldElement(3) + this->a * *this->x + this->b;
+            auto left_part = this->y->powFieldElement(2);
+            if(left_part != right_part) throw PointNotOnCurve();
+        }
     } catch(PointNotOnCurve& exception) {
         DEBUG(exception.what());
         std::exit(1);
@@ -146,23 +138,43 @@ Point::Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b) {
 
 Point Point::operator+(Point other) {
     try {
-        if(this->a != &other.a && this->b != &other.b) throw PointNotOnCurve();
+        if(this->a != other.a && this->b != other.b) throw PointNotOnCurve();
 
-        else if(this->x != other.x) {
+        else if(this->x->getNumberFieldElement() != other.x->getNumberFieldElement()) {
             auto s = (*other.y - *this->y) / (*other.x - *this->x);
             auto new_x = s.powFieldElement(2) - *this->x - *other.x;
             auto new_y = s * (*this->x - new_x) - *this->y;
 
-            return Point(new_x, new_y, this->a, this->b);
-        } else if(this == &other) {
+            return Point(&new_x, &new_y, this->a, this->b);
+        } else if(*this == other) {
             auto s = (FieldElement(3, this->a.getPrimeFieldElement()) * this->x->powFieldElement(2) + this->a) / (FieldElement(2, this->a.getPrimeFieldElement()) * *this->y);
-            auto x = s.powFieldElement(2) - FieldElement(2, this->a.getPrimeFieldElement()) * *this->x;
+            auto x = s.powFieldElement(2) - FieldElement(2, this->a.getPrimeFieldElement()) * (*this->x);
             auto y = s * (*this->x - x) - *this->y;
 
-            return Point(x, y, this->a, this->b);
+            return Point(&x, &y, this->a, this->b);
+        } else if(this->x->getNumberFieldElement() == other.x->getNumberFieldElement()) {
+            return Point(nullptr, nullptr, this->a, this->b);
+        } else if(this->x == nullptr && this->y == nullptr) {
+            return Point(nullptr, nullptr, this->a, this->b);
+        } else if(*this == other && this->y == 0) {
+            return Point(nullptr, nullptr, this->a, this->b);
+        } else if(this->x == nullptr) {
+            return other;
+        } else if(this->y == nullptr) {
+            return *this;
         }
     }  catch (PointNotOnCurve& exception) {
         DEBUG(exception.what());
         std::exit(1);
     }
+
+    std::exit(3);
+}
+
+bool Point::operator!=(Point other) {
+    return !(*this == other);
+}
+
+bool Point::operator==(Point other) {
+    return this->x == other.x && this->y == other.y && this->a == &other.a && this->b == &other.b;
 }

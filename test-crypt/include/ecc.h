@@ -34,9 +34,9 @@ public:
 
     FieldElement operator/(const FieldElement other);
 
-    bool operator==(const FieldElement *other);
+    bool operator==(const FieldElement *other);      // nullptr compare
 
-    bool operator!=(const FieldElement *other);
+    bool operator!=(const FieldElement other);
 
     inline int getNumberFieldElement() const { return this->number; }
 
@@ -50,17 +50,21 @@ private:
 };
 
 class Point {     // eliptic curve interface
-public:    
+public:
     // ECC with extension fields constructor
-    explicit Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b);
+    explicit Point(FieldElement *x, FieldElement *y, FieldElement a, FieldElement b);
 
     inline ~Point(){};
 
     Point operator+(Point other);
 
-    inline std::shared_ptr<FieldElement> getX() const { return x; }
+    bool operator!=(Point other);
 
-    inline std::shared_ptr<FieldElement> getY() const { return y; }
+    bool operator==(Point other);
+
+    inline int getX() const { return x->getNumberFieldElement(); }
+
+    inline int getY() const { return y->getNumberFieldElement(); }
 
 private:
     FieldElement a;
